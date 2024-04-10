@@ -8,6 +8,8 @@ import {
   SkyWayStreamFactory,
   uuidV4,
 } from "@skyway-sdk/room";
+import { VirtualBackground, BlurBackground } from "skyway-video-processors";
+const backgroundProcessor = new VirtualBackground({ image: "assets/back.jpg" });
 import Swal from "sweetalert2";
 
 const app_id = process.env.VUE_APP_SKY_APP_ID;
@@ -67,6 +69,7 @@ const token = new SkyWayAuthToken({
 onMounted(async () => {
   await handleCheckDevice();
   await localPushing();
+  await backgroundProcessor.initialize();
 });
 
 const handleCheckDevice = async () => {
@@ -111,13 +114,17 @@ const localPushing = async () => {
   //     video: videos.value.length > 0 ? true : false,
   //     audio: audios.value.length > 0 ? true : false,
   //   });
-  const {
-    audio,
-    video,
-  } = await SkyWayStreamFactory.createMicrophoneAudioAndCameraStream();
-  localVideo.srcObject = video;
+  const result = await backgroundProcessor.createProcessedStream();
+  const stream = new MediaStream([result.track]);
+  localVideo.srcObject = stream;
+  localVideoStream.value = stream;
+  //   const { audio, video } = await SkyWayStreamFactory.createMicrophoneAudioAndCameraStream(
+  //     {
+  //       stopTrackWhenDisabled: false,
+  //     }
+  //   );
+  //   localVideo.srcObject = video;
   await localVideo.play();
-  localVideoStream.value = video;
 };
 </script>
 <template>
