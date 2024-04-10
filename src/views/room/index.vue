@@ -65,7 +65,8 @@ const token = new SkyWayAuthToken({
   },
 }).encode(secret);
 
-const backgroundProcessor = new BlurBackground();
+const backgroundProcessor = new VirtualBackground({ image: "assets/back.jpg" });
+
 onMounted(async () => {
   await handleCheckDevice();
   await backgroundProcessor.initialize();
@@ -119,12 +120,6 @@ const localPushing = async () => {
   const stream = new MediaStream([result.track]);
   localVideo.srcObject = stream;
   localVideoStream.value = stream;
-  //   const { audio, video } = await SkyWayStreamFactory.createMicrophoneAudioAndCameraStream(
-  //     {
-  //       stopTrackWhenDisabled: false,
-  //     }
-  //   );
-  //   localVideo.srcObject = video;
   await localVideo.play();
 };
 </script>
