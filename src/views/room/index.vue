@@ -99,12 +99,18 @@ const connectLocalCamera = async () => {
   };
 
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
-    });
-    my_video.value.srcObject = stream;
-    localStream.value = stream;
+    const {
+      audio,
+      video,
+    } = await SkyWayStreamFactory.createMicrophoneAudioAndCameraStream(); // 2
+    // const stream = await navigator.mediaDevices.getUserMedia({
+    //   video: true,
+    //   audio: true,
+    // });
+    // my_video.value.srcObject = stream;
+    // localStream.value = stream;
+    video.attach(my_video.value);
+    await my_video.value.play();
     console.log("Detected the camera");
   } catch (e) {
     console.log("Device not found");
@@ -156,7 +162,7 @@ const connectLocalCamera = async () => {
         <div class="audio">
           <label for="" class="block">マイク:</label>
           <select v-model="selectedAudio" @change="onChange" class="p-2 w-full">
-            <option disabled value="">Please select one</option>
+            <option disabled value="">Please select Audio Device</option>
             <option
               v-for="(audio, key, index) in audios"
               v-bind:key="index"
@@ -169,7 +175,7 @@ const connectLocalCamera = async () => {
         <div class="camera">
           <label for="" class="block">カメラ:</label>
           <select v-model="selectedVideo" @change="onChange" class="p-2 w-full">
-            <option disabled value="">Please select one</option>
+            <option disabled value="">Please select Camera</option>
             <option
               v-for="(video, key, index) in videos"
               v-bind:key="index"
