@@ -115,11 +115,10 @@ const localPushing = async () => {
   //     audio: audios.value.length > 0 ? true : false,
   //   });
 
-  const video = await SkyWayStreamFactory.createCustomVideoStream(backgroundProcessor, {
-    stopTrackWhenDisabled: true,
-  });
-  localVideo.srcObject = video;
-  localVideoStream.value = video;
+  const result = await backgroundProcessor.createProcessedStream();
+  const stream = new MediaStream([result.track]);
+  localVideo.srcObject = stream;
+  localVideoStream.value = stream;
   //   const { audio, video } = await SkyWayStreamFactory.createMicrophoneAudioAndCameraStream(
   //     {
   //       stopTrackWhenDisabled: false,
