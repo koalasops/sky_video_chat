@@ -16,7 +16,8 @@ const audios = ref([]);
 const videos = ref([]);
 const roomId = ref("");
 const roomName = ref("");
-const localStream = ref();
+const localAudioStream = ref();
+const localVideoStream = ref();
 const localVideo = ref(null);
 const clientVideo = ref(null);
 
@@ -106,14 +107,17 @@ const handleCheckDevice = async () => {
 };
 const localPushing = async () => {
   const localVideo = document.getElementById("local-video");
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: videos.value.length > 0 ? true : false,
-    audio: audios.value.length > 0 ? true : false,
-  });
-  localVideo.srcObject = stream;
+  //   const stream = await navigator.mediaDevices.getUserMedia({
+  //     video: videos.value.length > 0 ? true : false,
+  //     audio: audios.value.length > 0 ? true : false,
+  //   });
+  const {
+    audio,
+    video,
+  } = await SkyWayStreamFactory.createMicrophoneAudioAndCameraStream();
+  localVideo.srcObject = video;
   await localVideo.play();
-  localStream.value = stream;
-  console.log(stream);
+  localVideoStream.value = video;
 };
 </script>
 <template>
@@ -144,7 +148,7 @@ const localPushing = async () => {
             playsinline
           ></video>
           <div
-            v-if="!localStream"
+            v-if="!localVideoStream"
             class="absolute w-24 h-24 rounded-full bg-gray-500 dark:bg-white dark:text-gray-900 flex items-center justify-center text-6xl font-bold"
           >
             Y
