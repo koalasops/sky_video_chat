@@ -110,7 +110,7 @@ const localPushing = async () => {
   }
   if (videos.value.length > 0) {
     const localVideo = document.getElementById("local-video");
-    const videoStream = SkyWayStreamFactory.createCameraVideoStream();
+    const videoStream = SkyWayStreamFactory.createCustomVideoStream();
     videoStream.attach(localVideo);
     await localVideo.play();
   }
