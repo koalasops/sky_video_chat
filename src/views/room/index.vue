@@ -112,6 +112,8 @@ const localPushing = async () => {
   });
   localVideo.srcObject = stream;
   await localVideo.play();
+  localStream.value = stream;
+  console.log(stream);
 };
 </script>
 <template>
