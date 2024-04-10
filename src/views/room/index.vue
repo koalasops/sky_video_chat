@@ -106,14 +106,15 @@ const handleCheckDevice = async () => {
 };
 const localPushing = async () => {
   const localVideo = document.getElementById("local-video");
-  if (videos.value.length > 0) {
-    const {
-      audio,
-      video,
-    } = await SkyWayStreamFactory.createMicrophoneAudioAndCameraStream();
-    video.attach(localVideo);
-    await localVideo.play();
-  }
+  alert(videos.value.length);
+  //   if (videos.value.length > 0) {
+  //     const {
+  //       audio,
+  //       video,
+  //     } = await SkyWayStreamFactory.createMicrophoneAudioAndCameraStream();
+  //     video.attach(localVideo);
+  //     await localVideo.play();
+  //   }
 };
 </script>
 <template>
