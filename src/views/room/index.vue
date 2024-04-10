@@ -65,7 +65,7 @@ const token = new SkyWayAuthToken({
   },
 }).encode(secret);
 
-const backgroundProcessor = new VirtualBackground({ image: "assets/back.jpg" });
+const backgroundProcessor = new VirtualBackground({ image: "../../assets/back.jpg" });
 
 onMounted(async () => {
   await handleCheckDevice();
