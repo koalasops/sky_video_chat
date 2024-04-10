@@ -21,6 +21,8 @@ const localStream = ref();
 const client_video = ref(null);
 const my_video = ref(null);
 const skyToken = ref();
+
+const room = ref();
 const token = new SkyWayAuthToken({
   jti: uuidV4(),
   iat: nowInSec(),
@@ -110,11 +112,26 @@ const connectLocalCamera = async () => {
     // my_video.value.srcObject = stream;
     // localStream.value = stream;
     video.attach(my_video.value);
+    localStream.value.audio = audio;
+    localStream.value.video = video;
     await my_video.value.play();
     console.log("Detected the camera");
   } catch (e) {
     console.log("Device not found");
   }
+};
+
+const makeCall = async () => {
+  if (calltoid.value == "") return;
+  const context = await SkyWayContext.Create(token);
+  const room = await SkyWayRoom.FindOrCreate(context, {
+    type: "p2p",
+    name: calltoid.value,
+  });
+  const me = await room.join();
+  peerId.value = me.id;
+  await me.publish(localStream.value.audio);
+  await me.publish(localStream.value.video);
 };
 </script>
 <template>
