@@ -105,9 +105,9 @@ const connectLocalCamera = async () => {
     });
     my_video.value.srcObject = stream;
     localStream.value = stream;
-    console.log("detect the camera");
+    console.log("Detected the camera");
   } catch (e) {
-    console.log("sdfnot found");
+    console.log("Device not found");
   }
 };
 </script>
