@@ -6,7 +6,6 @@ onMounted(async () => {
   const {
     data: { user },
   } = await window.supabase.auth.getUser();
-  console.log(user);
 });
 </script>
 <template>

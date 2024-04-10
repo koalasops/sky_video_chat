@@ -19,7 +19,6 @@ const localStream = ref();
 const client_video = ref(null);
 const my_video = ref(null);
 
-const room = ref();
 const token = new SkyWayAuthToken({
   jti: uuidV4(),
   iat: nowInSec(),
@@ -103,25 +102,27 @@ const connectLocalCamera = async () => {
   }
 };
 
-const meChannel = ref();
 const makeCall = async () => {
   if (roomName.value == "") {
     alert("Input the Room Name");
   }
   const context = await SkyWayContext.Create(token);
-  console.log(context);
-  room.value = await SkyWayRoom.FindOrCreate(context, {
+  console.log("Context:", context);
+  const room = await SkyWayRoom.FindOrCreate(context, {
     type: "p2p",
     name: roomName.value,
   });
-  meChannel.value = await room.value.join();
-  peerId.value = meChannel.value.id;
+
+  const me = await room.join();
+  console.log("Me:", me);
+  peerId.value = me.id;
   if (localStream.value?.audio || localStream.value?.video) {
-    await meChannel.value.publish(localStream.value?.audio);
-    await meChannel.value.publish(localStream.value?.video);
+    await me.publish(localStream.value?.audio);
+    await me.publish(localStream.value?.video);
   }
+
   const subscribeAndAttach = (publication) => {
-    if (publication.publisher.id === meChannel.value.id) return;
+    // if (publication.publisher.id === me.id) return;
 
     const subscribeButton = document.createElement("button");
     subscribeButton.textContent = `${publication.publisher.id}: ${publication.contentType}`;
@@ -129,7 +130,7 @@ const makeCall = async () => {
     buttonArea.appendChild(subscribeButton);
 
     subscribeButton.onclick = async () => {
-      const { stream } = await meChannel.value.subscribe(publication.id);
+      const { stream } = await me.subscribe(publication.id);
 
       let newMedia;
       switch (stream.track.kind) {
@@ -152,8 +153,9 @@ const makeCall = async () => {
     };
   };
 
-  room.value.publications.forEach(subscribeAndAttach);
-  room.value.onStreamPublished.add((e) => subscribeAndAttach(e.publication));
+  console.log("room:", room.publications);
+  room.publications.forEach(subscribeAndAttach);
+  room.onStreamPublished.add((e) => subscribeAndAttach(e.publication));
 };
 </script>
 <template>
