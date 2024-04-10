@@ -105,13 +105,13 @@ const handleCheckDevice = async () => {
   }
 };
 const localPushing = async () => {
-  if (audios.value.length > 0) {
-    const audioStream = SkyWayStreamFactory.createMicrophoneAudioStream();
-  }
+  const localVideo = document.getElementById("local-video");
   if (videos.value.length > 0) {
-    const localVideo = document.getElementById("local-video");
-    const videoStream = SkyWayStreamFactory.createCustomVideoStream();
-    videoStream.attach(localVideo);
+    const {
+      audio,
+      video,
+    } = await SkyWayStreamFactory.createMicrophoneAudioAndCameraStream();
+    video.attach(localVideo);
     await localVideo.play();
   }
 };
