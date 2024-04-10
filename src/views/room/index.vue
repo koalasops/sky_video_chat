@@ -11,6 +11,16 @@ import {
 
 const app_id = process.env.VUE_APP_SKY_APP_ID;
 const secret = process.env.VUE_APP_SKY_SECRET_KEY;
+const audios = ref([]);
+const videos = ref([]);
+const selectedAudio = ref("");
+const selectedVideo = ref("");
+const peerId = ref("");
+const calltoid = ref("");
+const localStream = ref();
+const client_video = ref(null);
+const my_video = ref(null);
+const skyToken = ref();
 const token = new SkyWayAuthToken({
   jti: uuidV4(),
   iat: nowInSec(),
@@ -53,14 +63,7 @@ const token = new SkyWayAuthToken({
     },
   },
 }).encode(secret);
-const audios = ref([]);
-const videos = ref([]);
-const selectedAudio = ref("");
-const selectedVideo = ref("");
-const peerId = ref("");
-const calltoid = ref("");
-const localStream = ref();
-const my_video = ref();
+
 onMounted(async () => {
   const deviceInfos = await navigator.mediaDevices.enumerateDevices();
   deviceInfos
@@ -101,6 +104,7 @@ const connectLocalCamera = async () => {
       audio: true,
     });
     my_video.value.srcObject = stream;
+    localStream.value = stream;
     console.log("detect the camera");
   } catch (e) {
     console.log("sdfnot found");
@@ -109,14 +113,29 @@ const connectLocalCamera = async () => {
 </script>
 <template>
   <Layout>
-    <p>Room</p>
+    <p class="">Room</p>
     <div class="p-4">
       <div class="video-mode flex gap-8">
-        <div class="w-[60%] client-mode rounded-xl overflow-hidden bg-gray-700">
+        <div
+          class="relative flex items-center justify-center w-[60%] h-full client-mode rounded-xl overflow-hidden bg-gray-700"
+        >
           <video ref="client_video" width="100%" autoplay playsinline></video>
+          <div
+            class="absolute w-24 h-24 rounded-full bg-gray-500 dark:bg-white dark:text-gray-900 flex items-center justify-center text-6xl font-bold"
+          >
+            C
+          </div>
         </div>
-        <div class="me w-[40%] rounded-xl overflow-hidden bg-gray-400">
+        <div
+          class="relative me flex items-center justify-center w-[40%] h-full rounded-xl overflow-hidden bg-gray-400"
+        >
           <video ref="my_video" muted="true" width="100%" autoplay playsinline></video>
+          <div
+            v-if="!localStream"
+            class="absolute w-24 h-24 rounded-full bg-gray-500 dark:bg-white dark:text-gray-900 flex items-center justify-center text-6xl font-bold"
+          >
+            Y
+          </div>
         </div>
       </div>
       <div class="join mt-4 text-start">
