@@ -139,16 +139,16 @@ export default {
         video: this.selectedVideo ? { deviceId: { exact: this.selectedVideo } } : false,
       };
 
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
-        document.getElementById("my-video").srcObject = stream;
-        this.localStream = stream;
-      } catch (error) {
-        console.log(error);
-      }
+      //   try {
+      //     const stream = await navigator.mediaDevices.getUserMedia({
+      //       video: true,
+      //       audio: true,
+      //     });
+      //     document.getElementById("my-video").srcObject = stream;
+      //     this.localStream = stream;
+      //   } catch (error) {
+      //     console.log(error);
+      //   }
     },
   },
 };
