@@ -4,10 +4,10 @@
     <div class="p-4">
       <div class="video-mode flex gap-8">
         <div class="w-[60%] client-mode rounded-xl overflow-hidden bg-gray-700">
-          <video id="their-video" width="100%" autoplay playsinline></video>
+          <video ref="client-video" width="100%" autoplay playsinline></video>
         </div>
         <div class="me w-[40%] rounded-xl overflow-hidden bg-gray-400">
-          <video id="my-video" muted="true" width="100%" autoplay playsinline></video>
+          <video ref="my_video" muted="true" width="100%" autoplay playsinline></video>
         </div>
       </div>
       <div class="join mt-4 text-start">
@@ -123,9 +123,29 @@ export default {
       localStream: {},
     };
   },
-  mounted() {
+  async mounted() {
     this.app_id = app_id;
     this.token = token;
+    const deviceInfos = await navigator.mediaDevices.enumerateDevices();
+    deviceInfos
+      .filter((f) => f.kind == "audioinput")
+      .map((audio) =>
+        this.audios.push({
+          text: audio.label || `Microphone ${this.audios.length + 1}`,
+          value: audio.deviceId,
+        })
+      );
+    // Get Camera Device Information
+    deviceInfos
+      .filter((f) => f.kind === "videoinput")
+      .map((video) =>
+        this.videos.push({
+          text: video.label || `Camera ${this.videos.length - 1}`,
+          value: video.deviceId,
+        })
+      );
+    console.log("Audio Device Info:", this.audios);
+    console.log("Camera Device Info", this.videos);
   },
   methods: {
     onChange() {
@@ -139,16 +159,16 @@ export default {
         video: this.selectedVideo ? { deviceId: { exact: this.selectedVideo } } : false,
       };
 
-      //   try {
-      //     const stream = await navigator.mediaDevices.getUserMedia({
-      //       video: true,
-      //       audio: true,
-      //     });
-      //     document.getElementById("my-video").srcObject = stream;
-      //     this.localStream = stream;
-      //   } catch (error) {
-      //     console.log(error);
-      //   }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+        this.$refs.my_video.srcObject = stream;
+        console.log("detect the camera");
+      } catch (e) {
+        console.log("sdfnot found");
+      }
     },
   },
 };
