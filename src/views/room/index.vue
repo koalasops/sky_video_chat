@@ -8,19 +8,16 @@ import {
   SkyWayStreamFactory,
   uuidV4,
 } from "@skyway-sdk/room";
-import { VirtualBackground, BlurBackground } from "skyway-video-processors";
-import Swal from "sweetalert2";
 
 const app_id = process.env.VUE_APP_SKY_APP_ID;
 const secret = process.env.VUE_APP_SKY_SECRET_KEY;
 const audios = ref([]);
 const videos = ref([]);
-const roomId = ref("");
+const peerId = ref("");
 const roomName = ref("");
-const localAudioStream = ref();
-const localVideoStream = ref();
-const localVideo = ref(null);
-const clientVideo = ref(null);
+const localStream = ref();
+const client_video = ref(null);
+const my_video = ref(null);
 
 const token = new SkyWayAuthToken({
   jti: uuidV4(),
@@ -66,11 +63,6 @@ const token = new SkyWayAuthToken({
 }).encode(secret);
 
 onMounted(async () => {
-  await handleCheckDevice();
-  await localPushing();
-});
-
-const handleCheckDevice = async () => {
   const deviceInfos = await navigator.mediaDevices.enumerateDevices();
   deviceInfos
     .filter((f) => f.kind == "audioinput")
@@ -89,34 +81,75 @@ const handleCheckDevice = async () => {
         value: video.deviceId,
       })
     );
-  if (audios.value.length == 0) {
-    Swal.fire({
-      title: "Device Error!",
-      text: "Not Found Audio Device",
-      icon: "error",
-      confirmButtonText: "Close",
-    });
-  }
-  if (videos.value.length == 0) {
-    Swal.fire({
-      title: "Device Error!",
-      text: "Not Found Camera Device",
-      icon: "error",
-      confirmButtonText: "Close",
-    });
-  }
-};
-const localPushing = async () => {
-  const localVideo = document.getElementById("local-video");
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: videos.value.length > 0 ? true : false,
-    audio: audios.value.length > 0 ? true : false,
-  });
+  console.log("Audio Device Info:", audios.value);
+  console.log("Camera Device Info", videos.value);
 
-  localVideo.srcObject = stream;
-  localVideoStream.value = stream;
-  await localVideo.play();
-};
+  (async () => {
+    const localVideo = document.getElementById("local-video");
+    const buttonArea = document.getElementById("button-area");
+    const remoteMediaArea = document.getElementById("remote-media-area");
+    const roomNameInput = document.getElementById("room-name");
+
+    const myId = document.getElementById("my-id");
+    const joinButton = document.getElementById("join");
+
+    const {
+      audio,
+      video,
+    } = await SkyWayStreamFactory.createMicrophoneAudioAndCameraStream();
+    video.attach(localVideo);
+    await localVideo.play();
+
+    joinButton.onclick = async () => {
+      if (roomNameInput.value === "") return;
+
+      const context = await SkyWayContext.Create(token);
+      const room = await SkyWayRoom.FindOrCreate(context, {
+        type: "p2p",
+        name: roomNameInput.value,
+      });
+      const me = await room.join();
+
+      myId.textContent = me.id;
+
+      await me.publish(audio);
+      await me.publish(video);
+
+      const subscribeAndAttach = (publication) => {
+        if (publication.publisher.id === me.id) return;
+
+        const subscribeButton = document.createElement("button");
+        subscribeButton.textContent = `${publication.publisher.id}: ${publication.contentType}`;
+        buttonArea.appendChild(subscribeButton);
+
+        subscribeButton.onclick = async () => {
+          const { stream } = await me.subscribe(publication.id);
+
+          let newMedia;
+          switch (stream.track.kind) {
+            case "video":
+              newMedia = document.createElement("video");
+              newMedia.playsInline = true;
+              newMedia.autoplay = true;
+              break;
+            case "audio":
+              newMedia = document.createElement("audio");
+              newMedia.controls = true;
+              newMedia.autoplay = true;
+              break;
+            default:
+              return;
+          }
+          stream.attach(newMedia);
+          remoteMediaArea.appendChild(newMedia);
+        };
+      };
+
+      room.publications.forEach(subscribeAndAttach);
+      room.onStreamPublished.add((e) => subscribeAndAttach(e.publication));
+    };
+  })();
+});
 </script>
 <template>
   <Layout>
@@ -146,7 +179,7 @@ const localPushing = async () => {
             playsinline
           ></video>
           <div
-            v-if="!localVideoStream"
+            v-if="!localStream"
             class="absolute w-24 h-24 rounded-full bg-gray-500 dark:bg-white dark:text-gray-900 flex items-center justify-center text-6xl font-bold"
           >
             Y
