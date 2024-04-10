@@ -65,11 +65,8 @@ const token = new SkyWayAuthToken({
   },
 }).encode(secret);
 
-const backgroundProcessor = new VirtualBackground({ image: "../../assets/back.jpg" });
-
 onMounted(async () => {
   await handleCheckDevice();
-  await backgroundProcessor.initialize();
   await localPushing();
 });
 
@@ -111,13 +108,11 @@ const handleCheckDevice = async () => {
 };
 const localPushing = async () => {
   const localVideo = document.getElementById("local-video");
-  //   const stream = await navigator.mediaDevices.getUserMedia({
-  //     video: videos.value.length > 0 ? true : false,
-  //     audio: audios.value.length > 0 ? true : false,
-  //   });
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: videos.value.length > 0 ? true : false,
+    audio: audios.value.length > 0 ? true : false,
+  });
 
-  const result = await backgroundProcessor.createProcessedStream();
-  const stream = new MediaStream([result.track]);
   localVideo.srcObject = stream;
   localVideoStream.value = stream;
   await localVideo.play();
