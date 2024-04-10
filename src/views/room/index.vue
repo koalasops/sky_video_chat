@@ -1,10 +1,119 @@
+<script setup>
+import { ref, onMounted } from "vue";
+import {
+  nowInSec,
+  SkyWayAuthToken,
+  SkyWayContext,
+  SkyWayRoom,
+  SkyWayStreamFactory,
+  uuidV4,
+} from "@skyway-sdk/room";
+
+const app_id = process.env.VUE_APP_SKY_APP_ID;
+const secret = process.env.VUE_APP_SKY_SECRET_KEY;
+const token = new SkyWayAuthToken({
+  jti: uuidV4(),
+  iat: nowInSec(),
+  exp: nowInSec() + 60 * 60 * 24,
+  scope: {
+    app: {
+      id: app_id,
+      turn: true,
+      actions: ["read"],
+      channels: [
+        {
+          id: "*",
+          name: "*",
+          actions: ["write"],
+          members: [
+            {
+              id: "*",
+              name: "*",
+              actions: ["write"],
+              publication: {
+                actions: ["write"],
+              },
+              subscription: {
+                actions: ["write"],
+              },
+            },
+          ],
+          sfuBots: [
+            {
+              actions: ["write"],
+              forwardings: [
+                {
+                  actions: ["write"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+}).encode(secret);
+const audios = ref([]);
+const videos = ref([]);
+const selectedAudio = ref("");
+const selectedVideo = ref("");
+const peerId = ref("");
+const calltoid = ref("");
+const localStream = ref();
+const my_video = ref();
+onMounted(async () => {
+  const deviceInfos = await navigator.mediaDevices.enumerateDevices();
+  deviceInfos
+    .filter((f) => f.kind == "audioinput")
+    .map((audio) =>
+      audios.value.push({
+        text: audio.label || `Microphone ${audios.value.length + 1}`,
+        value: audio.deviceId,
+      })
+    );
+  // Get Camera Device Information
+  deviceInfos
+    .filter((f) => f.kind === "videoinput")
+    .map((video) =>
+      videos.value.push({
+        text: video.label || `Camera ${videos.value.length - 1}`,
+        value: video.deviceId,
+      })
+    );
+  console.log("Audio Device Info:", audios.value);
+  console.log("Camera Device Info", videos.value);
+});
+
+const onChange = () => {
+  if (selectedAudio.value != "" && selectedVideo.value != "") {
+    connectLocalCamera();
+  }
+};
+const connectLocalCamera = async () => {
+  const constraints = {
+    audio: selectedAudio.value ? { deviceId: { exact: selectedAudio.value } } : false,
+    video: selectedVideo.value ? { deviceId: { exact: selectedVideo.value } } : false,
+  };
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+    my_video.value.srcObject = stream;
+    console.log("detect the camera");
+  } catch (e) {
+    console.log("sdfnot found");
+  }
+};
+</script>
 <template>
   <Layout>
     <p>Room</p>
     <div class="p-4">
       <div class="video-mode flex gap-8">
         <div class="w-[60%] client-mode rounded-xl overflow-hidden bg-gray-700">
-          <video ref="client-video" width="100%" autoplay playsinline></video>
+          <video ref="client_video" width="100%" autoplay playsinline></video>
         </div>
         <div class="me w-[40%] rounded-xl overflow-hidden bg-gray-400">
           <video ref="my_video" muted="true" width="100%" autoplay playsinline></video>
@@ -55,121 +164,3 @@
     </div>
   </Layout>
 </template>
-<script>
-const app_id = process.env.VUE_APP_SKY_APP_ID;
-const secret = process.env.VUE_APP_SKY_SECRET_KEY;
-const token = new SkyWayAuthToken({
-  jti: uuidV4(),
-  iat: nowInSec(),
-  exp: nowInSec() + 60 * 60 * 24,
-  scope: {
-    app: {
-      id: app_id,
-      turn: true,
-      actions: ["read"],
-      channels: [
-        {
-          id: "*",
-          name: "*",
-          actions: ["write"],
-          members: [
-            {
-              id: "*",
-              name: "*",
-              actions: ["write"],
-              publication: {
-                actions: ["write"],
-              },
-              subscription: {
-                actions: ["write"],
-              },
-            },
-          ],
-          sfuBots: [
-            {
-              actions: ["write"],
-              forwardings: [
-                {
-                  actions: ["write"],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  },
-}).encode(secret);
-import {
-  nowInSec,
-  SkyWayAuthToken,
-  SkyWayContext,
-  SkyWayRoom,
-  SkyWayStreamFactory,
-  uuidV4,
-} from "@skyway-sdk/room";
-
-export default {
-  data() {
-    return {
-      app_id: null,
-      token: null,
-      audios: [],
-      videos: [],
-      selectedAudio: "",
-      selectedVideo: "",
-      peerId: "",
-      calltoid: "",
-      localStream: {},
-    };
-  },
-  async mounted() {
-    this.app_id = app_id;
-    this.token = token;
-    const deviceInfos = await navigator.mediaDevices.enumerateDevices();
-    deviceInfos
-      .filter((f) => f.kind == "audioinput")
-      .map((audio) =>
-        this.audios.push({
-          text: audio.label || `Microphone ${this.audios.length + 1}`,
-          value: audio.deviceId,
-        })
-      );
-    // Get Camera Device Information
-    deviceInfos
-      .filter((f) => f.kind === "videoinput")
-      .map((video) =>
-        this.videos.push({
-          text: video.label || `Camera ${this.videos.length - 1}`,
-          value: video.deviceId,
-        })
-      );
-    console.log("Audio Device Info:", this.audios);
-    console.log("Camera Device Info", this.videos);
-  },
-  methods: {
-    onChange() {
-      if (this.selectedAudio != "" && this.selectedVideo != "") {
-        this.connectLocalCamera();
-      }
-    },
-    connectLocalCamera: async () => {
-      const constraints = {
-        audio: this.selectedAudio ? { deviceId: { exact: this.selectedAudio } } : false,
-        video: this.selectedVideo ? { deviceId: { exact: this.selectedVideo } } : false,
-      };
-
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
-        this.$refs.my_video.srcObject = stream;
-        console.log("detect the camera");
-      } catch (e) {
-        console.log("sdfnot found");
-      }
-    },
-  },
-};
-</script>
